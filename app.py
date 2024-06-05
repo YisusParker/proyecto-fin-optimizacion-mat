@@ -1,47 +1,88 @@
-from flask import Flask, render_template, request, jsonify
-from optimizer import (
-    plan_entrenamiento,
-)  # Importar la función de optimización desde el módulo optimizer
+from flask import Flask, render_template, request, jsonify, send_from_directory
+import os
+import random
+from pulp import LpProblem, LpMaximize, LpVariable, lpSum, value
 
-# Crear una instancia de la aplicación Flask
 app = Flask(__name__)
 
-
-# Definir la ruta para la página de inicio
-@app.route("/")
+@app.route('/')
 def index():
-    # Renderizar la plantilla index.html cuando se acceda a la ruta raíz
-    return render_template("index.html")
+    return render_template('index.html')
 
-
-# Definir la ruta para la página principal
-@app.route("/main")
+@app.route('/main')
 def main():
-    # Renderizar la plantilla main.html cuando se acceda a la ruta /main
-    return render_template("main.html")
+    return render_template('main.html')
 
-
-# Definir la ruta para la optimización, permitiendo solo métodos POST
-@app.route("/optimize", methods=["POST"])
+@app.route('/optimize', methods=['POST'])
 def optimize():
-    try:
-        # Obtener el número de días del formulario enviado y convertirlo a entero
-        num_dias = int(request.form["dias"])
-        # Verificar que el número de días esté dentro del rango permitido
-        if num_dias < 3 or num_dias > 7:
-            return jsonify(
-                {"error": "Por favor, ingrese un número válido entre 3 y 7."}
-            )
-    except ValueError:
-        # Manejar el caso en que el valor ingresado no sea un número entero válido
-        return jsonify({"error": "Por favor, ingrese un número válido entre 3 y 7."})
+    dias = int(request.form['dias'])
+    resultado, valor_optimo = plan_entrenamiento(dias)
+    return jsonify({
+        'resultado': resultado,
+        'valor_optimo': valor_optimo
+    })
 
-    # Llamar a la función de optimización con el número de días ingresado
-    resultado, valor_optimo = plan_entrenamiento(num_dias)
-    # Devolver el resultado y el valor óptimo en formato JSON
-    return jsonify({"resultado": resultado, "valor_optimo": valor_optimo})
+@app.route('/download_pdf/<int:dias>', methods=['GET'])
+def download_pdf(dias):
+    if dias < 3 or dias > 7:
+        return "Número de días inválido", 400
 
+    pdf_directory = os.path.join(app.static_folder, 'pdfs', str(dias))
+    if not os.path.exists(pdf_directory):
+        return "No se encontraron PDFs para el número de días especificado", 404
 
-# Ejecutar la aplicación en modo de depuración si este script es ejecutado directamente
-if __name__ == "__main__":
-    app.run(debug=True)
+    pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith('.pdf')]
+    if not pdf_files:
+        return "No se encontraron PDFs en la carpeta especificada", 404
+
+    random_pdf = random.choice(pdf_files)
+    return send_from_directory(pdf_directory, random_pdf, as_attachment=True)
+
+def plan_entrenamiento(num_dias):
+    problem = LpProblem("Maximizar_Hipertrofia", LpMaximize)
+
+    grupos = ['pecho', 'espalda', 'piernas', 'brazos']
+    dias = range(1, num_dias + 1)
+    series = LpVariable.dicts("Series", [(grupo, dia) for grupo in grupos for dia in dias], lowBound=0, upBound=6, cat='Integer')
+    entrenado = LpVariable.dicts("Entrenado", [(grupo, dia) for grupo in grupos for dia in dias], cat='Binary')
+
+    problem += lpSum(series[(grupo, dia)] for grupo in grupos for dia in dias), "Total de Series"
+
+    for dia in dias:
+        problem += lpSum(series[(grupo, dia)] for grupo in grupos) <= 12, f"MaxSeriesDia{dia}"
+
+    for grupo in grupos:
+        for dia in range(1, num_dias):
+            problem += series[(grupo, dia)] + series[(grupo, dia + 1)] <= 6, f"Descanso_{grupo}_Dia{dia}"
+
+    for dia in dias:
+        problem += lpSum(entrenado[(grupo, dia)] for grupo in grupos) <= 3, f"MaxGruposDia{dia}"
+
+    for dia in dias:
+        problem += lpSum(entrenado[(grupo, dia)] for grupo in grupos) >= 2, f"MinGruposDia{dia}"
+
+    for grupo in grupos:
+        for dia in dias:
+            problem += series[(grupo, dia)] >= 1 * entrenado[(grupo, dia)]
+            problem += series[(grupo, dia)] <= 6 * entrenado[(grupo, dia)]
+
+    problem.solve()
+
+    plan_semanal = {dia: {grupo: value(series[(grupo, dia)]) for grupo in grupos} for dia in dias}
+
+    resultado = f"Plan Semanal para {num_dias} días:<br>"
+    for dia, entrenamientos in plan_semanal.items():
+        resultado += f"Día {dia}:<br>"
+        for grupo, num_series in entrenamientos.items():
+            resultado += f"  {grupo}: {num_series} series<br>"
+        resultado += "<br>"
+
+    valor_optimo = f"Valor Óptimo de la Función Objetivo: {value(problem.objective)}<br>"
+    for grupo in grupos:
+        total_series = sum(plan_semanal[dia][grupo] for dia in dias)
+        valor_optimo += f"Total de series para {grupo}: {total_series}<br>"
+
+    return resultado, valor_optimo
+
+if __name__ == '__main__':
+    app.run()

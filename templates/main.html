@@ -24,6 +24,7 @@
     <!-- Contenedor para los botones de enviar y reiniciar -->
     <div class="buttons">
         <button type="button" onclick="handleButtonClick()">Enviar</button> <!-- Botón para enviar el formulario -->
+        <button type="button" id="downloadButton">Descargar</button>
         <button type="button" onclick="resetForm()">Reiniciar</button> <!-- Botón para reiniciar el formulario -->
     </div>
 
@@ -34,7 +35,7 @@
     <div class="result-container">
         <div id="resultado" class="resultado"></div> <!-- Div para mostrar el resultado de la optimización -->
         <div class="imagen2">
-            <img src="static\imgs\muscle2.png" alt="ej2"> <!-- Imagen decorativa -->
+            <img src="static/imgs/muscle2.png" alt="ej2"> <!-- Imagen decorativa -->
         </div>
     </div>
 
@@ -81,6 +82,9 @@
                         errorDiv.textContent = data.error;
                     } else {
                         document.getElementById('resultado').innerHTML = formatResult(data.resultado) + formatResult(data.valor_optimo);
+                        document.getElementById('downloadButton').onclick = function() {
+                            window.location.href = '/download_pdf/' + dias;
+                        };
                     }
                 })
                 .catch(error => console.error('Error:', error));
