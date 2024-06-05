@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"> <!-- Establece el juego de caracteres del documento -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Configura la ventana gráfica para que se ajuste al dispositivo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Enlaza el archivo CSS que se encuentra en la carpeta 'static' -->
+    <title>Proceso</title> <!-- Título del documento -->
+</head>
+
+<body>
+    <!-- Contenedor para el título principal -->
+    <div class="titulomain">Para comenzar ingrese el número de días disponibles para <br> entrenar (mínimo 3, máximo 7):
+    </div>
+
+    <!-- Contenedor para el campo de entrada de texto -->
+    <div class="pregunta">
+        <textarea id="dias" name="dias" rows="1" cols="50" oninput="validateInput()"></textarea>
+        <!-- Área de texto para ingresar los días -->
+    </div>
+
+    <!-- Contenedor para los botones de enviar y reiniciar -->
+    <div class="buttons">
+        <button type="button" onclick="handleButtonClick()">Enviar</button> <!-- Botón para enviar el formulario -->
+        <button type="button" onclick="resetForm()">Reiniciar</button> <!-- Botón para reiniciar el formulario -->
+    </div>
+
+    <!-- Contenedor para mostrar mensajes de error -->
+    <div id="error" class="error"></div>
+
+    <!-- Contenedor para mostrar el resultado y la imagen -->
+    <div class="result-container">
+        <div id="resultado" class="resultado"></div> <!-- Div para mostrar el resultado de la optimización -->
+        <div class="imagen2">
+            <img src="{{ url_for('static', filename='imgs/muscle 2.png') }}" alt="ej2"> <!-- Imagen decorativa -->
+        </div>
+    </div>
+
+    <!-- Enlace para volver a la página principal -->
+    <a href="/" class="back">Volver</a>
+
+    <!-- Script de JavaScript para manejar la validación, envío y reinicio del formulario -->
+    <script>
+        // Función para validar la entrada de texto
+        function validateInput() {
+            const diasInput = document.getElementById('dias');
+            const errorDiv = document.getElementById('error');
+            diasInput.value = diasInput.value.replace(/[^0-9]/g, '');  // Eliminar caracteres no numéricos
+            const dias = parseInt(diasInput.value);
+            if (isNaN(dias) || dias < 3 || dias > 7) {
+                errorDiv.textContent = "Por favor, ingrese un número válido entre 3 y 7.";
+            } else {
+                errorDiv.textContent = "";
+            }
+        }
+
+        // Función para manejar el clic del botón de envío
+        function handleButtonClick() {
+            const diasInput = document.getElementById('dias');
+            const dias = parseInt(diasInput.value);
+            const errorDiv = document.getElementById('error');
+
+            if (isNaN(dias) || dias < 3 || dias > 7) {
+                errorDiv.textContent = "Por favor, ingrese un número válido entre 3 y 7.";
+                return;
+            }
+
+            // Enviar la solicitud al servidor
+            fetch('/optimize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'dias=' + dias
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorDiv.textContent = data.error;
+                    } else {
+                        document.getElementById('resultado').innerHTML = formatResult(data.resultado) + formatResult(data.valor_optimo);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Función para formatear el resultado recibido del servidor
+        function formatResult(result) {
+            return result.replace(/(Día \d+:)/g, '<strong>$1</strong>')
+                .replace(/(Total de series para pecho: )(\d+(\.\d+)?)/g, '<strong>$1</strong>$2')
+                .replace(/(Total de series para espalda: )(\d+(\.\d+)?)/g, '<strong>$1</strong>$2')
+                .replace(/(Total de series para piernas: )(\d+(\.\d+)?)/g, '<strong>$1</strong>$2')
+                .replace(/(Total de series para brazos: )(\d+(\.\d+)?)/g, '<strong>$1</strong>$2')
+                .replace(/(Plan Semanal para \d+ días:)/g, '<strong>$1</strong>')
+                .replace(/(Valor Óptimo de la Función Objetivo: )(\d+(\.\d+)?)/g, '<strong>$1</strong>$2');
+        }
+
+        // Función para reiniciar el formulario
+        function resetForm() {
+            document.getElementById('dias').value = '';
+            document.getElementById('error').textContent = '';
+            document.getElementById('resultado').innerHTML = '';
+        }
+    </script>
+</body>
+
+</html>

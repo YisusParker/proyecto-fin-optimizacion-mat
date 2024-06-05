@@ -1,0 +1,23 @@
+# Flask: Micro web framework
+Flask==2.0.1
+
+# Gunicorn: WSGI HTTP Server for UNIX
+gunicorn==20.1.0
+
+# PuLP: Linear Programming in Python
+pulp==2.5.0
+
+# Werkzeug: Comprehensive WSGI web application library (a dependency of Flask)
+Werkzeug==2.0.1
+
+# Jinja2: Template engine for Python (a dependency of Flask)
+Jinja2==3.0.1
+
+# ItsDangerous: Required for Flask session management
+itsdangerous==2.0.1
+
+# Click: Command Line Interface creation toolkit (a dependency of Flask)
+click==8.0.1
+
+# MarkupSafe: Safely add untrusted strings to HTML/XML (a dependency of Jinja2)
+MarkupSafe==2.0.1

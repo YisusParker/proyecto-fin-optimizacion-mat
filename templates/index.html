@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Metadatos básicos del documento HTML -->
+    <meta charset="UTF-8"> <!-- Establece el juego de caracteres del documento -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Configura la ventana gráfica para que se ajuste al dispositivo -->
+
+    <!-- Enlace a la hoja de estilos CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Enlaza el archivo CSS que se encuentra en la carpeta 'static' -->
+
+    <!-- Preconexión a Google Fonts para mejorar el rendimiento de carga -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Enlace a la fuente Kanit desde Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap"
+        rel="stylesheet">
+
+    <!-- Título del documento -->
+    <title>Inicio</title>
+</head>
+
+<body>
+    <!-- Contenedor principal para la primera sección -->
+    <div class="caja1">
+        <!-- Título principal de la página -->
+        <div class="titulo">Welcome to GymBody: Your Ultimate Fitness <br> Companion</div>
+        <!-- Texto descriptivo de bienvenida -->
+        <div class="texto1">
+            <p>At GymBody, we are dedicated to making exercise easier and more accessible for everyone. Whether you're a
+                seasoned athlete or <br>just beginning your fitness journey, GymBody is here to support and guide you
+                every
+                step of the way.</p>
+        </div>
+    </div>
+
+    <!-- Contenedor para la llamada a la acción y la imagen -->
+    <div class="caja15">
+        <!-- Enlace para comenzar el viaje de fitness -->
+        <a href="/main" class="callto">Start Your Fitness Journey Today</a>
+        <!-- Contenedor de la imagen -->
+        <div class="imagen1">
+            <!-- Imagen decorativa -->
+            <img src="{{ url_for('static', filename='imgs/gymmode.png') }}" alt="ej1">
+        </div>
+    </div>
+
+    <!-- Contenedor para la segunda sección de texto -->
+    <div class="caja2">
+        <div class="texto2">
+            Ready to transform your fitness routine? Sign up now and discover how GymBody can make <br> exercising
+            easier
+            and more enjoyable. Join our community and take the first step towards a healthier, happier you.
+        </div>
+        <!-- Enlace de registro y más información -->
+        <div class="sign">Sign Up Now | Learn More</div>
+    </div>
+
+    <!-- Imagen en la esquina de la página -->
+    <div class="corner-image">
+        <img src="{{ url_for('static', filename='imgs/muscle 1.png') }}" alt="Corner Image">
+    </div>
+</body>
+
+</html>
